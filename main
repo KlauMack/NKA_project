@@ -1,0 +1,65 @@
+import nltk
+import re
+import heapq
+import matplotlib.pyplot as plt
+
+# Creating a list of sentences in the file 
+with open('file.txt', 'r') as file:
+    text = file.read()
+
+# Removing special characters and digits
+formatted_text = re.sub('[^a-zA-Z]', ' ', text )
+formatted_text = re.sub(r'\s+', ' ', formatted_text)
+
+sentence_list = nltk.sent_tokenize(text)
+
+# Find Weighted Frequency of Occurrence
+stopwords = nltk.corpus.stopwords.words('english')
+
+word_frequencies = {}
+for word in nltk.word_tokenize(formatted_text):
+    if word not in stopwords:
+        if word not in word_frequencies.keys():
+            word_frequencies[word] = 1
+        else:
+            word_frequencies[word] += 1
+
+maximum_frequncy = max(word_frequencies.values())
+
+for word in word_frequencies.keys():
+    word_frequencies[word] = (word_frequencies[word]/maximum_frequncy)
+
+sentence_scores = {}
+for sent in sentence_list:
+    for word in nltk.word_tokenize(sent.lower()):
+        if word in word_frequencies.keys():
+            if len(sent.split(' ')) < 30:
+                if sent not in sentence_scores.keys():
+                    sentence_scores[sent] = word_frequencies[word]
+                else:
+                    sentence_scores[sent] += word_frequencies[word]
+
+summary_length = len(sentence_list)//2
+summary_sentences = heapq.nlargest(summary_length, sentence_scores, key=sentence_scores.get)
+
+summary = ' '.join(summary_sentences)
+#print(summary)
+
+amount1 = sum(len(i) for i in text)
+amount2 = sum(len(i) for i in summary)
+
+# creating the dataset
+data = {'Original text':amount1, 'Summary':amount2}
+type = list(data.keys())
+values = list(data.values())
+  
+fig = plt.figure(figsize = (6, 5))
+
+# creating the bar plot
+plt.bar(type, values, color ='blue',
+        width = 0.4)
+ 
+plt.xlabel("Type of text")
+plt.ylabel("No. of characters")
+plt.title("Character number difference between texts")
+plt.show()
